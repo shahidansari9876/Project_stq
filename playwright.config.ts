@@ -1,5 +1,5 @@
 /// <reference types="node" />
-import { defineConfig, devices } from "@playwright/test";
+import { defineConfig } from "@playwright/test";
 import dotenv from "dotenv";
 import path from "path";
 
@@ -62,7 +62,7 @@ export default defineConfig({
     /* Video recording — enable if desired */
     // video: 'on-first-retry',
     ignoreHTTPSErrors: true,
-    navigationTimeout: 30_000,
+    // navigationTimeout: 30_000,
   },
 
   /* Configure projects for major browsers */

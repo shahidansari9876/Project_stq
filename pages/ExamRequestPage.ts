@@ -1,5 +1,5 @@
-import { Page } from '@playwright/test';
-import { BASE_URL } from './env';
+import { Page } from "@playwright/test";
+import { BASE_URL } from "./env";
 
 /**
  * Beneficiary "Create Scribe Request" form (/new-request), PU Semester Exam
@@ -15,56 +15,63 @@ export class ExamRequestPage {
   }
 
   async navigate(): Promise<void> {
-    await this.page.goto(this.NEW_REQUEST_URL, { waitUntil: 'networkidle' });
+    await this.page.goto(this.NEW_REQUEST_URL, { waitUntil: "networkidle" });
   }
 
   // "This is a semester exam" is a required Yes/No radio group (not a
   // checkbox) — confirmed live. Selecting "Yes" follows the Panjab
   // University semester flow (reveals Exam Category / Semester Number);
   // "No" keeps this a regular exam request.
-  async selectSemesterExam(answer: 'Yes' | 'No'): Promise<void> {
+  async selectSemesterExam(answer: "Yes" | "No"): Promise<void> {
     await this.page
-      .getByRole('radiogroup', { name: 'This is a semester exam' })
-      .getByRole('radio', { name: answer })
+      .getByRole("radiogroup", { name: "This is a semester exam" })
+      .getByRole("radio", { name: answer })
       .click();
   }
 
   async selectExamCategory(category: string): Promise<void> {
-    await this.page.getByRole('combobox', { name: 'Exam Category *' }).click();
-    await this.page.getByRole('option', { name: category }).click();
+    await this.page.getByRole("combobox", { name: "Exam Category *" }).click();
+    await this.page.getByRole("option", { name: category }).click();
   }
 
   async selectSemesterNumber(semester: string): Promise<void> {
-    await this.page.getByRole('combobox', { name: 'Semester Number (All exam types) *' }).click();
-    await this.page.getByRole('option', { name: semester }).click();
+    await this.page
+      .getByRole("combobox", { name: "Semester Number (All exam types) *" })
+      .click();
+    await this.page.getByRole("option", { name: semester }).click();
   }
 
   async fillExamTitle(title: string): Promise<void> {
-    await this.page.getByRole('textbox', { name: 'Exam Title' }).fill(title);
+    await this.page.getByRole("textbox", { name: "Exam Title" }).fill(title);
   }
 
   async fillMedium(medium: string): Promise<void> {
-    await this.page.getByRole('textbox', { name: 'Medium of Exam' }).fill(medium);
+    await this.page
+      .getByRole("textbox", { name: "Medium of Exam" })
+      .fill(medium);
   }
 
-  // Both exam-request uploads are real <input type="file"> elements, so
-  // setInputFiles() works on them directly — it intentionally skips the
-  // visibility actionability check that click() enforces, so no click or
-  // native file-chooser dance is needed (same pattern as the other file
-  // inputs in this project).
-  //
-  // Admit Card / Hall Pass is a single-file, sr-only input whose aria-label
-  // starts with "Admit Card / Hall Pass" — confirmed live.
+  // The underlying <input type="file"> is sr-only (1 × 1 px, clipped) and
+  // cannot be reached with a plain setInputFiles() call — Playwright's
+  // actionability check rejects the clipped element.  Instead we click the
+  // visible styled button, which opens a native file-chooser, and hand the
+  // file to that chooser.  The waitForEvent listener must be registered
+  // before (or concurrently with) the click; the 'filechooser' event can fire
+  // as soon as the click resolves, so awaiting the click first would miss it.
   async uploadHallPass(filePath: string): Promise<void> {
-    await this.page.locator('input[aria-label*="Admit Card"]').setInputFiles(filePath);
+    const [chooser] = await Promise.all([
+      this.page.waitForEvent("filechooser"),
+      this.page.locator('button[aria-label*="Admit Card"]').click(),
+    ]);
+    await chooser.setFiles(filePath);
   }
 
-  // The Date Sheets input is a separate, visible multi-file input that — unlike
-  // the Admit Card one — carries NO aria-label (confirmed live), so it can only
-  // be distinguished by its `multiple` attribute. It accepts one or more files;
-  // a single path is fine here.
   async uploadDateSheet(filePath: string): Promise<void> {
-    await this.page.locator('input[type="file"][multiple]').setInputFiles(filePath);
+    const [chooser] = await Promise.all([
+      this.page.waitForEvent("filechooser"),
+      this.page.locator('button[aria-label*="Date Sheet"]').click(),
+    ]);
+    await chooser.setFiles(filePath);
   }
 
   /**
@@ -79,9 +86,11 @@ export class ExamRequestPage {
    * instead — use fillExamCenterName() there.
    */
   async selectExamCenter(searchTerm: string): Promise<void> {
-    await this.page.getByPlaceholder('Search official PU examination centre').fill(searchTerm);
-    const option = this.page.getByRole('option').first();
-    await option.waitFor({ state: 'visible', timeout: 10000 });
+    await this.page
+      .getByPlaceholder("Search official PU examination centre")
+      .fill(searchTerm);
+    const option = this.page.getByRole("option").first();
+    await option.waitFor({ state: "visible", timeout: 10000 });
     await option.click();
   }
 
@@ -89,55 +98,84 @@ export class ExamRequestPage {
   // confirmed live: with "This is a semester exam" set to No, this field is
   // a free-text textbox, not the PU search-driven combobox above.
   async fillExamCenterName(name: string): Promise<void> {
-    await this.page.getByRole('textbox', { name: 'Exam Center Name' }).fill(name);
+    await this.page
+      .getByRole("textbox", { name: "Exam Center Name" })
+      .fill(name);
   }
 
   async fillExamCenterCity(city: string): Promise<void> {
-    await this.page.getByRole('textbox', { name: 'City (Exam Center)' }).fill(city);
+    await this.page
+      .getByRole("textbox", { name: "City (Exam Center)" })
+      .fill(city);
   }
 
   async fillExamCenterPincode(pincode: string): Promise<void> {
-    await this.page.getByRole('textbox', { name: 'Pin code (Exam Center)' }).fill(pincode);
+    await this.page
+
+      .getByRole("textbox", { name: "Pin code (Exam Center)" })
+
+      .fill(pincode);
   }
 
   async fillExamCenterAddress(address: string): Promise<void> {
-    await this.page.getByRole('textbox', { name: 'Full Address of Exam Center' }).fill(address);
+    await this.page
+      .getByRole("textbox", { name: "Full Address of Exam Center" })
+      .fill(address);
   }
 
   async fillSubjectName(subject: string): Promise<void> {
-    await this.page.getByRole('textbox', { name: 'Subject Name' }).fill(subject);
+    await this.page
+      .getByRole("textbox", { name: "Subject Name" })
+      .fill(subject);
   }
 
-  async selectExamDate(year: string, month: string, day: string): Promise<void> {
-    await this.page.getByLabel('Exam Date Year').selectOption(year);
-    await this.page.getByLabel('Exam Date Month').selectOption(month);
-    await this.page.getByLabel('Exam Date Day').selectOption(day);
+  async selectExamDate(
+    year: string,
+    month: string,
+    day: string,
+  ): Promise<void> {
+    await this.page.getByLabel("Exam Date Year").selectOption(year);
+    await this.page.getByLabel("Exam Date Month").selectOption(month);
+    await this.page.getByLabel("Exam Date Day").selectOption(day);
   }
 
   // Hour/minute options are unpadded ("9", not "09") for Start Time and
   // padded ("00"-"59") for the minute list — confirmed live, not a typo.
-  async selectStartTime(hour: string, minute: string, ampm: 'AM' | 'PM'): Promise<void> {
-    await this.selectCustomTimeOption('Exam Time Start Time Hour', hour);
-    await this.selectCustomTimeOption('Exam Time Start Time Minute', minute);
-    await this.selectCustomTimeOption('Exam Time Start Time AM/PM', ampm);
+  async selectStartTime(
+    hour: string,
+    minute: string,
+    ampm: "AM" | "PM",
+  ): Promise<void> {
+    await this.selectCustomTimeOption("Exam Time Start Time Hour", hour);
+    await this.selectCustomTimeOption("Exam Time Start Time Minute", minute);
+    await this.selectCustomTimeOption("Exam Time Start Time AM/PM", ampm);
   }
 
-  async selectEndTime(hour: string, minute: string, ampm: 'AM' | 'PM'): Promise<void> {
-    await this.selectCustomTimeOption('Exam Time End Time Hour', hour);
-    await this.selectCustomTimeOption('Exam Time End Time Minute', minute);
-    await this.selectCustomTimeOption('Exam Time End Time AM/PM', ampm);
+  async selectEndTime(
+    hour: string,
+    minute: string,
+    ampm: "AM" | "PM",
+  ): Promise<void> {
+    await this.selectCustomTimeOption("Exam Time End Time Hour", hour);
+    await this.selectCustomTimeOption("Exam Time End Time Minute", minute);
+    await this.selectCustomTimeOption("Exam Time End Time AM/PM", ampm);
   }
 
-  private async selectCustomTimeOption(comboboxName: string, value: string): Promise<void> {
-    await this.page.getByRole('combobox', { name: comboboxName }).click();
-    await this.page.getByRole('option', { name: value, exact: true }).click();
+  private async selectCustomTimeOption(
+    comboboxName: string,
+    value: string,
+  ): Promise<void> {
+    await this.page.getByRole("combobox", { name: comboboxName }).click();
+    await this.page.getByRole("option", { name: value, exact: true }).click();
   }
 
   async fillNotes(notes: string): Promise<void> {
-    await this.page.getByRole('textbox', { name: 'Notes (If Any)' }).fill(notes);
+    await this.page
+      .getByRole("textbox", { name: "Notes (If Any)" })
+      .fill(notes);
   }
 
   async submit(): Promise<void> {
-    await this.page.getByRole('button', { name: 'Submit' }).click();
+    await this.page.getByRole("button", { name: "Submit" }).click();
   }
 }
