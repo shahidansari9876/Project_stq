@@ -19,7 +19,7 @@ export class OtpPageTestSuite {
         // Navigate straight to the masterOtp=true URL (not loginPage.navigate(), which
         // clicks "Sign In" from the homepage and lands on plain /login) — the fixed
         // OTP bypass ('123456') only authenticates when this query param is present.
-        await page.goto(loginPage.LOGIN_URL, { waitUntil: 'networkidle' });
+        await page.goto(loginPage.LOGIN_URL, { waitUntil: 'domcontentloaded', timeout: 30000 });
         await loginPage.enterEmail('shahidstq@yopmail.com');
         await loginPage.submitEmail();
 

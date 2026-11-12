@@ -28,7 +28,7 @@ export class AdminCoeVerificationPage {
   // Waiting for the search's own network activity to settle (rather than
   // racing the still-unfiltered list) is still required either way.
   async openScribeRequest(searchQuery: string, beneficiaryName: string): Promise<void> {
-    await this.page.goto(this.SCRIBE_REQUESTS_URL, { waitUntil: 'networkidle' });
+    await this.page.goto(this.SCRIBE_REQUESTS_URL, { waitUntil: 'domcontentloaded', timeout: 30000 });
     await this.page.getByRole('textbox', { name: 'Search by name, email, phone' }).fill(searchQuery);
     // The search is debounced client-side before it fires its network
     // request — waiting for networkidle right after fill() can resolve
@@ -37,7 +37,11 @@ export class AdminCoeVerificationPage {
     // default unfiltered rows). Waiting for the URL to pick up
     // global_search first confirms the debounced request actually fired.
     await this.page.waitForURL(/global_search=/, { timeout: 10000 });
-    await this.page.waitForLoadState('networkidle');
+    // Best-effort settle for the debounced search response. Bounded + swallowed
+    // so a never-idle SPA can't hang here until the test times out (which would
+    // surface as "Target page, context or browser has been closed"); the table
+    // link click below auto-waits for the filtered row regardless.
+    await this.page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
     // Scoped to the results table — an unscoped page-wide role query can
     // instead match the logged-in admin's own sidebar account link (e.g.
     // "SA shahid ansari ..."), which renders before the table in the DOM,

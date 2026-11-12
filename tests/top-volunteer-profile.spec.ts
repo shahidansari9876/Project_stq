@@ -30,14 +30,14 @@ const BENEFICIARY_EMAIL = 'shahidstq@yopmail.com';
 async function loginAs(page: Page, email: string): Promise<void> {
   const loginPage = new LoginPage(page);
   const otpPage = new OtpPage(page);
-  await page.goto(loginPage.LOGIN_URL, { waitUntil: 'networkidle' });
+  await page.goto(loginPage.LOGIN_URL, { waitUntil: 'domcontentloaded', timeout: 30000 });
   await loginPage.enterEmail(email);
   await loginPage.submitEmail();
   expect(await loginPage.isOtpPageDisplayed(20000)).toBeTruthy();
   await otpPage.enterOtp(TEST_OTP);
   await otpPage.submitOtp();
   await page.waitForURL((url) => !url.pathname.includes('/login'), { timeout: 20000 });
-  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
 }
 
 test.describe('Beneficiary Profile: Top Volunteers link verification', () => {
@@ -72,7 +72,7 @@ test.describe('Beneficiary Profile: Top Volunteers link verification', () => {
         expect(nameBeforeClick, 'Top Volunteer entry should show a name before it is clicked').not.toBe('');
 
         await link.click();
-        await page.waitForLoadState('networkidle');
+        await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
 
         // Race the two possible outcomes rather than checking one then the
         // other with isVisible() — isVisible() doesn't wait, so checking

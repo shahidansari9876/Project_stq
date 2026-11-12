@@ -1,5 +1,5 @@
-import { Page, Locator, expect } from '@playwright/test';
-import { BASE_URL } from './env';
+import { Page, Locator, expect } from "@playwright/test";
+import { BASE_URL } from "./env";
 
 export class LoginPage {
   readonly page: Page;
@@ -12,46 +12,58 @@ export class LoginPage {
   }
 
   async navigate(): Promise<void> {
-    await this.page.goto(this.HOMEPAGE_URL, { waitUntil: 'networkidle' });
+    await this.page.goto(this.HOMEPAGE_URL, { waitUntil: "domcontentloaded", timeout: 30000 });
 
-    const loginButton = this.page.locator(
-      'button:has-text("Sign In"), a:has-text("Sign In"), button:has-text("Login"), a:has-text("Login"), [data-testid="signin-button"], [id*="signin" i], [href*="login"]'
-    ).first();
+    const loginButton = this.page
+      .locator(
+        'button:has-text("Sign In"), a:has-text("Sign In"), button:has-text("Login"), a:has-text("Login"), [data-testid="signin-button"], [id*="signin" i], [href*="login"]',
+      )
+      .first();
 
-    if (await loginButton.count() > 0 && await loginButton.isVisible().catch(() => false)) {
+    if (
+      (await loginButton.count()) > 0 &&
+      (await loginButton.isVisible().catch(() => false))
+    ) {
       await loginButton.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
       return;
     }
 
-    await this.page.goto(this.LOGIN_URL, { waitUntil: 'networkidle' });
-    if (!this.page.url().includes('/login')) {
-      await this.page.goto(this.LOGIN_FALLBACK_URL, { waitUntil: 'networkidle' });
+    await this.page.goto(this.LOGIN_URL, { waitUntil: "domcontentloaded", timeout: 30000 });
+    if (!this.page.url().includes("/login")) {
+      await this.page.goto(this.LOGIN_FALLBACK_URL, {
+        waitUntil: "domcontentloaded",
+        timeout: 30000,
+      });
     }
   }
 
   async waitForPageLoad(): Promise<void> {
-    await this.page.waitForLoadState('networkidle');
+    await this.page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
   }
 
   private async resolveEmailField(): Promise<Locator> {
     // The real field on this app is #identifier / name="identifier" (confirmed against the live site).
     // Try that first so a stray type="text" input elsewhere in the DOM can't be picked up instead.
-    const identifierField = this.page.locator('input#identifier, input[name="identifier"]').first();
-    if (await identifierField.count() > 0) {
+    const identifierField = this.page
+      .locator('input#identifier, input[name="identifier"]')
+      .first();
+    if ((await identifierField.count()) > 0) {
       return identifierField;
     }
 
     // Fallback for environments where the field markup differs — the login field accepts
     // both email and phone, so it may not be type="email".
     return this.page
-      .locator('input[type="email"], input[placeholder*="email"], input[placeholder*="phone"], input[type="text"], input[type="tel"]')
+      .locator(
+        'input[type="email"], input[placeholder*="email"], input[placeholder*="phone"], input[type="text"], input[type="tel"]',
+      )
       .first();
   }
 
   async enterEmail(email: string): Promise<void> {
     const emailField = await this.resolveEmailField();
-    await emailField.waitFor({ state: 'visible' });
+    await emailField.waitFor({ state: "visible" });
     // The form can still be hydrating right after navigate() — a fill() that lands
     // before React takes over the input gets silently wiped back to "" a moment
     // later. A passive assertion can't recover from that, so retry the fill itself
@@ -67,7 +79,7 @@ export class LoginPage {
     // filled and verified, then silently cleared before submitEmail() clicked
     // Login). Re-check after a short settle and refill once if it got wiped.
     await this.page.waitForTimeout(500);
-    if (await emailField.inputValue() !== email) {
+    if ((await emailField.inputValue()) !== email) {
       await emailField.fill(email);
       await expect(emailField).toHaveValue(email);
     }
@@ -75,10 +87,12 @@ export class LoginPage {
 
   async submitEmail(): Promise<void> {
     // Includes "Login" to match the actual button text on the page
-    const submitButton = this.page.locator(
-      'button[type="submit"], button:has-text("Login"), button:has-text("Continue"), button:has-text("Next")'
-    ).first();
-    await submitButton.waitFor({ state: 'visible' });
+    const submitButton = this.page
+      .locator(
+        'button[type="submit"], button:has-text("Login"), button:has-text("Continue"), button:has-text("Next")',
+      )
+      .first();
+    await submitButton.waitFor({ state: "visible" });
     await submitButton.click();
   }
 
@@ -87,9 +101,9 @@ export class LoginPage {
     // and it always contains the literal substring "otp" (from the masterOtp=true query
     // param), so a URL-based fallback can't distinguish "OTP shown" from "still on login".
     // The OTP input field visibility is the only reliable signal for this app.
-    const otpField = this.page.getByPlaceholder('Enter 6-digit OTP');
+    const otpField = this.page.getByPlaceholder("Enter 6-digit OTP");
     try {
-      await otpField.waitFor({ state: 'visible', timeout });
+      await otpField.waitFor({ state: "visible", timeout });
       return true;
     } catch {
       return false;
@@ -105,7 +119,11 @@ export class LoginPage {
   }
 
   async isErrorDisplayed(): Promise<boolean> {
-    const errorLocator = this.page.locator('[class*="error"], [role="alert"], .invalid-feedback, .error-message').first();
+    const errorLocator = this.page
+      .locator(
+        '[class*="error"], [role="alert"], .invalid-feedback, .error-message',
+      )
+      .first();
     return await errorLocator.isVisible().catch(() => false);
   }
 }

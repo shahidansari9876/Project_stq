@@ -18,11 +18,11 @@ export class ProfilePage {
   }
 
   async navigateAsBeneficiary(): Promise<void> {
-    await this.page.goto(this.BENEFICIARY_URL, { waitUntil: 'networkidle' });
+    await this.page.goto(this.BENEFICIARY_URL, { waitUntil: 'domcontentloaded', timeout: 30000 });
   }
 
   async navigateAsVolunteer(): Promise<void> {
-    await this.page.goto(this.VOLUNTEER_URL, { waitUntil: 'networkidle' });
+    await this.page.goto(this.VOLUNTEER_URL, { waitUntil: 'domcontentloaded', timeout: 30000 });
   }
 
   getDisplayNameHeading(): Locator {

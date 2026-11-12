@@ -17,8 +17,19 @@ export class RegistrationPage {
 
   // masterOtp=true must be on the URL itself — the fixed OTP bypass ('123456')
   // only applies when this query param is present on the initial navigation.
+  //
+  // waitUntil is 'domcontentloaded', NOT 'networkidle'. This SPA keeps
+  // background requests open (polling / websockets / analytics), so it never
+  // reaches network idle — 'networkidle' there hangs until the test timeout,
+  // which tears the page down and surfaces as the misleading
+  // "Target page, context or browser has been closed" on this line. The
+  // downstream steps (enterEmail/enterPhone .fill(), isOtpFieldVisible())
+  // auto-wait for their own elements, so DOM-ready is sufficient here.
   async navigate(): Promise<void> {
-    await this.page.goto(this.SIGNUP_URL, { waitUntil: 'networkidle' });
+    await this.page.goto(this.SIGNUP_URL, {
+      waitUntil: 'domcontentloaded',
+      timeout: 30000,
+    });
   }
 
   async enterEmail(email: string): Promise<void> {

@@ -10,7 +10,7 @@ export class AdminLoginPage {
   }
 
   async navigate(): Promise<void> {
-    await this.page.goto(this.LOGIN_URL, { waitUntil: 'networkidle' });
+    await this.page.goto(this.LOGIN_URL, { waitUntil: 'domcontentloaded', timeout: 30000 });
   }
 
   async enterEmail(email: string): Promise<void> {

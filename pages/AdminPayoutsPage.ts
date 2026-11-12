@@ -23,7 +23,7 @@ export class AdminPayoutsPage {
   // elsewhere in this suite, but it's what the volunteer-side Assistance
   // Payouts search matches on (see VolunteerPayoutsPage).
   async openPayoutForExam(searchQuery: string): Promise<string> {
-    await this.page.goto(this.PAYOUTS_URL, { waitUntil: 'networkidle' });
+    await this.page.goto(this.PAYOUTS_URL, { waitUntil: 'domcontentloaded', timeout: 30000 });
     await this.page
       .getByRole('textbox', { name: 'Search by volunteer name, transaction/UTR ID, exam name, or subject' })
       .fill(searchQuery);
@@ -31,7 +31,11 @@ export class AdminPayoutsPage {
     // networkidle right after fill() can resolve before the debounce timer
     // fires the actual request, leaving the table still showing unfiltered rows.
     await this.page.waitForURL(/global_search=/, { timeout: 10000 });
-    await this.page.waitForLoadState('networkidle');
+    // Best-effort settle for the debounced search response. Bounded + swallowed
+    // so a never-idle SPA can't hang here until the test times out (which would
+    // surface as "Target page, context or browser has been closed"); the
+    // "Edit payment" click below auto-waits for the filtered row regardless.
+    await this.page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
     await this.page.getByRole('table').getByRole('button', { name: 'Edit payment' }).first().click();
 
     const examId = await this.getDialogFieldValue('Exam ID');

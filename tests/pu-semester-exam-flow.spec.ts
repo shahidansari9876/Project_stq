@@ -65,13 +65,13 @@ async function logout(page: Page): Promise<void> {
   // the redirect itself can land after the network settles — so wait for the
   // actual destination URL before navigating away.
   await page.waitForURL(/\/login/, { timeout: 15000 });
-  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
 }
 
 async function loginAs(page: Page, email: string): Promise<void> {
   const loginPage = new LoginPage(page);
   const otpPage = new OtpPage(page);
-  await page.goto(loginPage.LOGIN_URL, { waitUntil: 'networkidle' });
+  await page.goto(loginPage.LOGIN_URL, { waitUntil: 'domcontentloaded', timeout: 30000 });
   await loginPage.enterEmail(email);
   await loginPage.submitEmail();
   expect(await loginPage.isOtpPageDisplayed(20000)).toBeTruthy();
@@ -82,7 +82,7 @@ async function loginAs(page: Page, email: string): Promise<void> {
   // race that in-flight redirect and land back on /login unauthenticated —
   // mirrors the logout() race above, just in the opposite direction.
   await page.waitForURL((url) => !url.pathname.includes('/login'), { timeout: 20000 });
-  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
 }
 
 test.describe.serial('PU Semester Exam End-to-End Flow (puflow.md)', () => {
@@ -255,7 +255,7 @@ test.describe.serial('PU Semester Exam End-to-End Flow (puflow.md)', () => {
     await expect(adminPage.getByText('Rejected', { exact: true }).first()).toBeVisible();
 
     console.log('📍 Volunteer sees the rejection reason and re-uploads');
-    await page.reload({ waitUntil: 'networkidle' });
+    await page.reload({ waitUntil: 'domcontentloaded', timeout: 30000 });
     await expect(page.getByText(rejectionReason)).toBeVisible();
     const docs = new ProfileDocumentsPage(page);
     await docs.clickReviewDocuments();
@@ -265,7 +265,7 @@ test.describe.serial('PU Semester Exam End-to-End Flow (puflow.md)', () => {
     await expect(page.getByText('In Review', { exact: true })).toBeVisible();
 
     console.log('📍 Admin approves the re-uploaded document');
-    await adminPage.reload({ waitUntil: 'networkidle' });
+    await adminPage.reload({ waitUntil: 'domcontentloaded', timeout: 30000 });
     await expect(adminPage.getByText('Re-Uploaded')).toBeVisible();
     await review.approveIdentityDocument();
   });
@@ -339,7 +339,7 @@ test.describe.serial('PU Semester Exam End-to-End Flow (puflow.md)', () => {
     await review.verifyPhoto();
 
     console.log('📍 Second accept attempt succeeds');
-    await page.reload({ waitUntil: 'networkidle' });
+    await page.reload({ waitUntil: 'domcontentloaded', timeout: 30000 });
     await activity.clickAcceptRequest();
     await activity.confirmAcceptance();
     await expect(page.getByText('Awaiting PU Verification')).toBeVisible();
@@ -373,14 +373,14 @@ test.describe.serial('PU Semester Exam End-to-End Flow (puflow.md)', () => {
     await expect(page.getByText('Awaiting PU Verification')).toBeVisible();
 
     console.log('📍 Admin re-reviews and fully verifies');
-    await adminPage.reload({ waitUntil: 'networkidle' });
+    await adminPage.reload({ waitUntil: 'domcontentloaded', timeout: 30000 });
     await expect(adminPage.getByText('Resubmitted • Awaiting Verification')).toBeVisible();
     await coe.checkAllVerificationItems();
     await coe.approveAndVerify();
     await expect(adminPage.getByText('Accepted & Verified')).toBeVisible();
 
     console.log('📍 PU Verification Permission Letter is downloadable on both sides');
-    await page.reload({ waitUntil: 'networkidle' });
+    await page.reload({ waitUntil: 'domcontentloaded', timeout: 30000 });
     await expect(page.getByRole('link', { name: 'Download Permission Letter' })).toBeVisible();
   });
 

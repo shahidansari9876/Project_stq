@@ -133,7 +133,7 @@ async function openBeneficiaryProfileForm(
   const profile = new SetupProfilePage(page);
 
   console.log("📍 Step 1: Login with masterOtp + verify OTP");
-  await page.goto(loginPage.LOGIN_URL, { waitUntil: "networkidle" });
+  await page.goto(loginPage.LOGIN_URL, { waitUntil: "domcontentloaded", timeout: 30000 });
   await loginPage.enterEmail(TEST_EMAIL);
   await loginPage.submitEmail();
   expect(await loginPage.isOtpPageDisplayed(20000)).toBeTruthy();
@@ -166,7 +166,7 @@ test.describe("Beneficiary Profile - Field-Level Functional Checks", () => {
     // clicks "Sign In" from the homepage and lands on plain /login) — the fixed
     // OTP bypass ('123456') only applies when this query param is present.
     console.log("\n📍 Step 1: Login with masterOtp + verify OTP");
-    await page.goto(loginPage.LOGIN_URL, { waitUntil: "networkidle" });
+    await page.goto(loginPage.LOGIN_URL, { waitUntil: "domcontentloaded", timeout: 30000 });
     await loginPage.enterEmail(TEST_EMAIL);
     await loginPage.submitEmail();
 

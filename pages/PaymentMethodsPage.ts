@@ -15,7 +15,7 @@ export class PaymentMethodsPage {
   }
 
   async navigate(): Promise<void> {
-    await this.page.goto(this.URL, { waitUntil: 'networkidle' });
+    await this.page.goto(this.URL, { waitUntil: 'domcontentloaded', timeout: 30000 });
   }
 
   async clickAddPaymentMethod(): Promise<void> {

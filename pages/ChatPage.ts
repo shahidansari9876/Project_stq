@@ -18,11 +18,11 @@ export class ChatPage {
   }
 
   async navigateAsBeneficiary(conversationId: string): Promise<void> {
-    await this.page.goto(`${BASE_URL}/beneficiary/messages?conversation_id=${conversationId}`, { waitUntil: 'networkidle' });
+    await this.page.goto(`${BASE_URL}/beneficiary/messages?conversation_id=${conversationId}`, { waitUntil: 'domcontentloaded', timeout: 30000 });
   }
 
   async navigateAsVolunteer(conversationId: string): Promise<void> {
-    await this.page.goto(`${BASE_URL}/volunteer/messages?conversation_id=${conversationId}`, { waitUntil: 'networkidle' });
+    await this.page.goto(`${BASE_URL}/volunteer/messages?conversation_id=${conversationId}`, { waitUntil: 'domcontentloaded', timeout: 30000 });
   }
 
   // Both /beneficiary/messages and /volunteer/messages carry the open

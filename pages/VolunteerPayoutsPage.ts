@@ -17,7 +17,7 @@ export class VolunteerPayoutsPage {
   }
 
   async navigate(): Promise<void> {
-    await this.page.goto(this.URL, { waitUntil: 'networkidle' });
+    await this.page.goto(this.URL, { waitUntil: 'domcontentloaded', timeout: 30000 });
   }
 
   async searchByExamId(examId: string | number): Promise<void> {

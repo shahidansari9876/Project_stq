@@ -15,7 +15,7 @@ export class SignUpPage {
   }
 
   async navigate(): Promise<void> {
-    await this.page.goto(this.HOMEPAGE_URL, { waitUntil: 'networkidle' });
+    await this.page.goto(this.HOMEPAGE_URL, { waitUntil: 'domcontentloaded', timeout: 30000 });
 
     const signupButton = this.page.locator(
       'button:has-text("Sign Up"), a:has-text("Sign Up"), button:has-text("Register"), a:has-text("Register"), a:has-text("Join"), button:has-text("Join"), [href*="signup" i], [href*="register" i]'
@@ -23,7 +23,7 @@ export class SignUpPage {
 
     if (await signupButton.count() > 0 && await signupButton.isVisible().catch(() => false)) {
       await signupButton.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
       return;
     }
 
@@ -33,13 +33,13 @@ export class SignUpPage {
 
     if (await signinFallback.count() > 0 && await signinFallback.isVisible().catch(() => false)) {
       await signinFallback.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
       return;
     }
 
-    await this.page.goto(this.SIGNUP_URL, { waitUntil: 'networkidle' });
+    await this.page.goto(this.SIGNUP_URL, { waitUntil: 'domcontentloaded', timeout: 30000 });
     if (!this.page.url().includes('/signup')) {
-      await this.page.goto(this.SIGNUP_FALLBACK_URL, { waitUntil: 'networkidle' });
+      await this.page.goto(this.SIGNUP_FALLBACK_URL, { waitUntil: 'domcontentloaded', timeout: 30000 });
     }
   }
 

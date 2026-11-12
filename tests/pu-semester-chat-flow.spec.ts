@@ -99,13 +99,13 @@ async function logout(page: Page): Promise<void> {
   await page.getByRole("button", { name: /Profile picture of/ }).click();
   await page.getByRole("menuitem", { name: "Logout" }).click();
   await page.waitForURL(/\/login/, { timeout: 15000 });
-  await page.waitForLoadState("networkidle");
+  await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
 }
 
 async function loginAs(page: Page, email: string): Promise<void> {
   const loginPage = new LoginPage(page);
   const otpPage = new OtpPage(page);
-  await page.goto(loginPage.LOGIN_URL, { waitUntil: "networkidle" });
+  await page.goto(loginPage.LOGIN_URL, { waitUntil: "domcontentloaded", timeout: 30000 });
   await loginPage.enterEmail(email);
   await loginPage.submitEmail();
   expect(await loginPage.isOtpPageDisplayed(20000)).toBeTruthy();
@@ -114,7 +114,7 @@ async function loginAs(page: Page, email: string): Promise<void> {
   await page.waitForURL((url) => !url.pathname.includes("/login"), {
     timeout: 20000,
   });
-  await page.waitForLoadState("networkidle");
+  await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
 }
 
 test.describe.serial("PU Semester Exam Chat Gate Flow", () => {
@@ -300,7 +300,7 @@ test.describe.serial("PU Semester Exam Chat Gate Flow", () => {
       ).toBeVisible();
 
       console.log("📍 Retry acceptance now that PU requirements are satisfied");
-      await page.reload({ waitUntil: "networkidle" });
+      await page.reload({ waitUntil: "domcontentloaded", timeout: 30000 });
       await activity.clickAcceptRequest();
     }
 

@@ -15,11 +15,11 @@ export class ExamActivityPage {
   }
 
   async navigateAsBeneficiary(examId: string | number): Promise<void> {
-    await this.page.goto(`${BASE_URL}/beneficiary/exam/${examId}`, { waitUntil: 'networkidle' });
+    await this.page.goto(`${BASE_URL}/beneficiary/exam/${examId}`, { waitUntil: 'domcontentloaded', timeout: 30000 });
   }
 
   async navigateAsVolunteer(examId: string | number): Promise<void> {
-    await this.page.goto(`${BASE_URL}/volunteer/exam/${examId}`, { waitUntil: 'networkidle' });
+    await this.page.goto(`${BASE_URL}/volunteer/exam/${examId}`, { waitUntil: 'domcontentloaded', timeout: 30000 });
   }
 
   // --- Volunteer: accept the scribe request ---

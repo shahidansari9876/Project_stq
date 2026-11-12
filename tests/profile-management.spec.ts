@@ -29,14 +29,14 @@ const runId = Date.now();
 async function loginAs(page: Page, email: string): Promise<void> {
   const loginPage = new LoginPage(page);
   const otpPage = new OtpPage(page);
-  await page.goto(loginPage.LOGIN_URL, { waitUntil: 'networkidle' });
+  await page.goto(loginPage.LOGIN_URL, { waitUntil: 'domcontentloaded', timeout: 30000 });
   await loginPage.enterEmail(email);
   await loginPage.submitEmail();
   expect(await loginPage.isOtpPageDisplayed(20000)).toBeTruthy();
   await otpPage.enterOtp(TEST_OTP);
   await otpPage.submitOtp();
   await page.waitForURL((url) => !url.pathname.includes('/login'), { timeout: 20000 });
-  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
 }
 
 // Shared by both roles — Educational Qualifications has identical fields on

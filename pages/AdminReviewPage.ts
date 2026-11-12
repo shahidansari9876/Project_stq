@@ -16,7 +16,7 @@ export class AdminReviewPage {
   }
 
   async searchAndOpen(listUrl: string, query: string): Promise<void> {
-    await this.page.goto(listUrl, { waitUntil: 'networkidle' });
+    await this.page.goto(listUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
     await this.page.getByRole('textbox', { name: 'Search by name, email, phone' }).fill(query);
     // The list re-filters asynchronously after fill(); scoping to the row that
     // actually contains the query (rather than an unscoped .first()) makes
