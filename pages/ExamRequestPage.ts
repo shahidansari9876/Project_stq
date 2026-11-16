@@ -19,14 +19,50 @@ export class ExamRequestPage {
   }
 
   // "This is a semester exam" is a required Yes/No radio group (not a
-  // checkbox) — confirmed live. Selecting "Yes" follows the Panjab
-  // University semester flow (reveals Exam Category / Semester Number);
-  // "No" keeps this a regular exam request.
+  // checkbox) — confirmed live via the page's ARIA tree. Selecting "Yes"
+  // follows the Panjab University semester flow (reveals Exam Category /
+  // Semester Number); "No" keeps this a regular (non-PU) exam request. The
+  // field ALWAYS renders on the create-request form and must be answered in
+  // every flow — an unanswered required radio makes the form look complete but
+  // silently blocks submit ("Please select whether this is a semester exam").
   async selectSemesterExam(answer: "Yes" | "No"): Promise<void> {
-    await this.page
-      .getByRole("radiogroup", { name: "This is a semester exam" })
-      .getByRole("radio", { name: answer })
-      .click();
+    const group = this.page.getByRole("radiogroup", {
+      name: /This is a semester exam/,
+    });
+    // navigate() resolves on domcontentloaded, so the React form mounts a beat
+    // later — wait for the group before interacting. (A non-waiting presence
+    // check is what previously skipped this selection and let an invalid form
+    // reach submit.) Each option renders a visually hidden <input> alongside a
+    // styled radio node, so click the option's visible label TEXT rather than
+    // the nested role=radio node — clicking the label reliably toggles it.
+    await group.waitFor({ state: "visible", timeout: 15000 });
+    await group.getByText(answer, { exact: true }).first().click();
+  }
+
+  // After submit(), the app leaves /new-request for the beneficiary area —
+  // usually the request list (/beneficiary), occasionally straight to the new
+  // exam's detail page. If it navigates nowhere, the form rejected a required
+  // field, so surface the on-form validation text instead of a bare
+  // waitForURL timeout that gives no clue why.
+  async waitForSubmitSuccess(timeout = 30000): Promise<void> {
+    try {
+      await this.page.waitForURL(/\/beneficiary(\/|\?|#|$)/, { timeout });
+    } catch (navError) {
+      const validation = (
+        await this.page
+          .locator('[role="alert"], [aria-invalid="true"], [class*="error" i]')
+          .allInnerTexts()
+      )
+        .map((t) => t.trim())
+        .filter(Boolean)
+        .join(" | ");
+      if (validation) {
+        throw new Error(
+          `Exam request did not submit — form validation: ${validation}`,
+        );
+      }
+      throw navError;
+    }
   }
 
   async selectExamCategory(category: string): Promise<void> {

@@ -31,6 +31,7 @@ async function loginAs(page: Page, email: string): Promise<void> {
   const otpPage = new OtpPage(page);
   await page.goto(loginPage.LOGIN_URL, { waitUntil: 'domcontentloaded', timeout: 30000 });
   await loginPage.enterEmail(email);
+  console.log(email)
   await loginPage.submitEmail();
   expect(await loginPage.isOtpPageDisplayed(20000)).toBeTruthy();
   await otpPage.enterOtp(TEST_OTP);

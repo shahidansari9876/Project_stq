@@ -86,8 +86,12 @@ test.describe.serial('Non-PU Exam Chat Flow', () => {
     await loginAs(page, beneficiary.email);
 
     const examRequest = new ExamRequestPage(page);
-    console.log('📍 Fill and submit a regular exam request ("This is a semester exam" is PU-board-only and does not render for this non-PU account)');
+    console.log('📍 Fill and submit a regular exam request (answer "This is a semester exam" = No — not a PU semester flow — then create)');
     await examRequest.navigate();
+    // Answer the required "This is a semester exam" radio = No (regular, non-PU
+    // exam). It always renders on this form; leaving it unanswered blocks
+    // submit with "Please select whether this is a semester exam".
+    await examRequest.selectSemesterExam('No');
     await examRequest.fillExamTitle(examTitle);
     await examRequest.fillMedium('English');
     await examRequest.uploadHallPass(images.hallPass);
@@ -102,10 +106,14 @@ test.describe.serial('Non-PU Exam Chat Flow', () => {
     await examRequest.selectEndTime('12', '00', 'PM');
     await examRequest.fillNotes('QA test exam request created for chat-flow testing.');
     await examRequest.submit();
-    await page.waitForURL('**/beneficiary', { timeout: 20000 });
+    await examRequest.waitForSubmitSuccess();
 
-    await page.getByRole('link', { name: 'View Details' }).first().click();
-    await page.waitForURL(/\/beneficiary\/exam\/\d+/, { timeout: 15000 });
+    // Open the created exam's detail page. If submit landed us straight on it,
+    // skip the list's "View Details" click.
+    if (!/\/beneficiary\/exam\/\d+/.test(page.url())) {
+      await page.getByRole('link', { name: 'View Details' }).first().click();
+      await page.waitForURL(/\/beneficiary\/exam\/\d+/, { timeout: 15000 });
+    }
     examId = new URL(page.url()).pathname.split('/').pop()!;
     console.log(`📍 Created exam ID: ${examId}`);
     expect(examId).toMatch(/^\d+$/);
