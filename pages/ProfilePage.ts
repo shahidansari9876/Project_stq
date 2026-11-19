@@ -131,6 +131,30 @@ export class ProfilePage {
     return this.page.locator('img[alt^="Cover photo for"]').first();
   }
 
+  // Safe "src" read for the profile picture / cover photo. An account that
+  // has never uploaded one shows an initials avatar (a div, not an <img>),
+  // so the <img> may be absent entirely. Reading .getAttribute('src')
+  // directly on an absent element auto-waits until the whole test times out
+  // and the page is torn down, surfacing as "Target page, context or
+  // browser has been closed". Instead, wait a bounded time for the image to
+  // attach and return null when it isn't there — a clean "no image yet"
+  // signal the before/after comparison can use.
+  async getProfilePictureSrc(): Promise<string | null> {
+    const img = this.getProfilePictureImage();
+    return img
+      .waitFor({ state: 'attached', timeout: 10000 })
+      .then(() => img.getAttribute('src'))
+      .catch(() => null);
+  }
+
+  async getCoverPhotoSrc(): Promise<string | null> {
+    const img = this.getCoverPhotoImage();
+    return img
+      .waitFor({ state: 'attached', timeout: 10000 })
+      .then(() => img.getAttribute('src'))
+      .catch(() => null);
+  }
+
   // "Preferred Volunteer Gender" (beneficiary-only — this field doesn't
   // exist on the volunteer's Edit Profile Details dialog) has no accessible
   // name of its own (confirmed live), but it's the only combobox in this

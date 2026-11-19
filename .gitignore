@@ -42,3 +42,6 @@ Thumbs.db
 *.temp
 
 newtest.md
+
+# Env config module (machine-specific; points at test vs prod)
+pages/env.ts

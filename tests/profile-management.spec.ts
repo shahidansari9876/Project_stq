@@ -117,8 +117,8 @@ test.describe.serial('Beneficiary Profile Management', () => {
   let originalLastName: string;
 
   test('Edit Profile Details: update name (then revert), photo, banner, and preferred volunteer gender', async () => {
-    const profilePicBefore = await profile.getProfilePictureImage().getAttribute('src');
-    const bannerBefore = await profile.getCoverPhotoImage().getAttribute('src');
+    const profilePicBefore = await profile.getProfilePictureSrc();
+    const bannerBefore = await profile.getCoverPhotoSrc();
 
     const currentPreference = (await profile.getPreferredVolunteerText().textContent())?.trim() ?? '';
     const newGender = currentPreference.includes('Male') ? 'Female' : 'Male';
@@ -145,8 +145,8 @@ test.describe.serial('Beneficiary Profile Management', () => {
     await expect(profile.getDisplayNameHeading()).toContainText(`Test${runId}`);
     await expect(page.getByText(`Preferred Volunteer: ${newGender}`)).toBeVisible();
 
-    const profilePicAfter = await profile.getProfilePictureImage().getAttribute('src');
-    const bannerAfter = await profile.getCoverPhotoImage().getAttribute('src');
+    const profilePicAfter = await profile.getProfilePictureSrc();
+    const bannerAfter = await profile.getCoverPhotoSrc();
     expect(profilePicAfter, 'Profile picture src should change after upload').not.toBe(profilePicBefore);
     expect(profilePicAfter, 'Profile picture src should reference the uploaded file').toContain('profile');
     expect(bannerAfter, 'Banner src should change after upload').not.toBe(bannerBefore);
@@ -209,8 +209,8 @@ test.describe.serial('Volunteer Profile Management', () => {
     // No "Preferred Volunteer Gender" field exists on this dialog for the
     // volunteer role (confirmed live) — only the beneficiary test above
     // covers it.
-    const profilePicBefore = await profile.getProfilePictureImage().getAttribute('src');
-    const bannerBefore = await profile.getCoverPhotoImage().getAttribute('src');
+    const profilePicBefore = await profile.getProfilePictureSrc();
+    const bannerBefore = await profile.getCoverPhotoSrc();
 
     console.log('\n📍 Capture the current first/last name and update both to temp values');
     await profile.openEditProfileDetails();
@@ -231,8 +231,8 @@ test.describe.serial('Volunteer Profile Management', () => {
     await expect(profile.getDisplayNameHeading()).toContainText(`QA${runId}`);
     await expect(profile.getDisplayNameHeading()).toContainText(`Test${runId}`);
 
-    const profilePicAfter = await profile.getProfilePictureImage().getAttribute('src');
-    const bannerAfter = await profile.getCoverPhotoImage().getAttribute('src');
+    const profilePicAfter = await profile.getProfilePictureSrc();
+    const bannerAfter = await profile.getCoverPhotoSrc();
     expect(profilePicAfter, 'Profile picture src should change after upload').not.toBe(profilePicBefore);
     expect(profilePicAfter, 'Profile picture src should reference the uploaded file').toContain('profile');
     expect(bannerAfter, 'Banner src should change after upload').not.toBe(bannerBefore);
